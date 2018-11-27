@@ -1,6 +1,7 @@
 #include "fullsimulationlogger.hpp"
 
-FullSimulationLogger::FullSimulationLogger()
+void FullSimulationLogger::setTimer(const std::shared_ptr<Timer> &timer)
 {
+    timer_ = timer;
 
 }
