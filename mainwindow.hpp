@@ -24,6 +24,7 @@ private:
     int amountOfProcessors_;
     int amountOfGenerators_;
     int amountOfOrders_;
+    int bufferSize_;
     double minTime_;
     double maxTime_;
     double lamda_;
