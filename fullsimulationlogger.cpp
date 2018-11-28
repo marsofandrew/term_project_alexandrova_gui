@@ -43,6 +43,7 @@ void FullSimulationLogger::sendMessage(const Logger::Type &type, const std::stri
 void FullSimulationLogger::setTimer(const std::shared_ptr<Timer> &timer)
 {
     timer_ = timer;
+
 }
 
 std::size_t FullSimulationLogger::getAmountOfCreatedOrders(unsigned long generatorID)
