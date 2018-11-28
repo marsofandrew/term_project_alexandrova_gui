@@ -20,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->comboBox->addItem(FULL_SIMULATE);
     ui->comboBox->addItem(STEP_BY_STEP_SIMULATE);
+    ui->fullTimeSimulationScreen->setEnabled(false);
+    ui->fullTimeSimulationScreen->setHidden(true);
+    this->setFixedSize(800,600);
 }
 
 MainWindow::~MainWindow()
@@ -36,7 +39,7 @@ void MainWindow::showCriticalAlert(const QString &message){
 bool MainWindow::getVariables(){
     bool ok = false;
     amountOfGenerators_ = ui->tGemeratorAmount_2->text().toInt(&ok);
-    if (!ok || amountOfGenerators_ < 0){
+    if (!ok || amountOfGenerators_ <= 0){
         showCriticalAlert("Amount of generators must be positive integer");
         return false;
     }
@@ -54,7 +57,7 @@ bool MainWindow::getVariables(){
     }
 
      amountOfProcessors_ = ui->tProcessorAmount_2->text().toInt(&ok);
-    if (!ok || amountOfGenerators_ < 0){
+    if (!ok || amountOfGenerators_ <= 0){
         showCriticalAlert("Amount of processors must be positive integer");
         return false;
     }
@@ -65,9 +68,14 @@ bool MainWindow::getVariables(){
         return false;
     }
 
-    amountOfOrders_ = ui->tOrderAmount_2->text().toInt(&ok);
-   if (!ok || amountOfOrders_ < 0){
+   amountOfOrders_ = ui->tOrderAmount_2->text().toInt(&ok);
+   if (!ok || amountOfOrders_ <= 0){
        showCriticalAlert("Amount of orders must be positive integer");
+       return false;
+   }
+    bufferSize_ = ui->tBufferSize->text().toInt(&ok);
+    if (!ok || bufferSize_ < 0){
+       showCriticalAlert("Buffer size must be positive integer or 0");
        return false;
    }
     return true;

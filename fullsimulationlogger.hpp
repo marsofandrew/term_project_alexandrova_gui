@@ -4,13 +4,18 @@
 #include <memory>
 #include "library/include/interfaces/Logger.hpp"
 #include "library/include/interfaces/Timer.hpp"
+#include <vector>
+#include <map>
+
+class Order;
+class GeneratorPool;
 
 class FullSimulationLogger: public Logger
 {
 public:
-    FullSimulationLogger() = default;
+    FullSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool);
 
-    void sendCratedOrder(const std::shared_ptr<Order> &order) override;
+    void sendCreatedOrder(const std::shared_ptr<Order> &order) override;
 
     void sendRefusedOrder(const std::shared_ptr<Order> &order) override;
 
@@ -29,8 +34,19 @@ public:
 
     void setTimer(const std::shared_ptr<Timer> &timer) override;
 
+    std::size_t getAmountOfCreatedOrders(unsigned long generatorID);
+
+    double getRefusedProbability(unsigned long generatorID);
+
+    Timer::time getAverageTimeInSystem(unsigned long generatorID);
+
+    Timer::time getAverageTimeInProcessor(unsigned long generatorID);
+
+    Timer::time getAverageTimeInBuffer(unsigned long generatorID);
+
 private:
     std::shared_ptr<Timer> timer_;
+    std::map<unsigned long, std::vector<std::shared_ptr<Order>>> cashe_;
 };
 
 #endif // FULLSIMULATIONLOGGER_HPP
