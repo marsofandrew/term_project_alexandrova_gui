@@ -1,7 +1,12 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include "fullsimulationlogger.hpp"
+
 #include <QMainWindow>
+#include <memory>
+
+#include <library/include/interfaces/ProcessorPool.hpp>
 
 namespace Ui {
 class MainWindow;
@@ -29,6 +34,8 @@ private:
     double maxTime_;
     double lamda_;
 
+    std::shared_ptr<Timer> timer_;
+
     const static QString FULL_SIMULATE;
     const static QString STEP_BY_STEP_SIMULATE;
 
@@ -37,6 +44,9 @@ private:
 
     void runStepByStepSimulation();
     void runFullSimulation();
+
+    void showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors);
+    void showStepByStepSimulationResults();
 };
 
 #endif // MAINWINDOW_HPP

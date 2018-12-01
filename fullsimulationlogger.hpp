@@ -34,6 +34,8 @@ public:
 
     void setTimer(const std::shared_ptr<Timer> &timer) override;
 
+    std::vector<unsigned long> getGeneratorsIDs();
+
     std::size_t getAmountOfCreatedOrders(unsigned long generatorID);
 
     double getRefusedProbability(unsigned long generatorID);
@@ -43,6 +45,8 @@ public:
     Timer::time getAverageTimeInProcessor(unsigned long generatorID);
 
     Timer::time getAverageTimeInBuffer(unsigned long generatorID);
+
+    double getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime);
 
 private:
     std::shared_ptr<Timer> timer_;

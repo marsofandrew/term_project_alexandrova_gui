@@ -8,10 +8,10 @@
 
 FullSimulationLogger::FullSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool)
 {
-   auto generators = generatorPool->getGenerators();
-   for (std::shared_ptr<Generator> generator: generators){
-       cashe_.insert(std::pair<unsigned long, std::vector<std::shared_ptr<Order>>>(generator->getId(), std::vector<std::shared_ptr<Order>>()));
-   }
+    auto generators = generatorPool->getGenerators();
+    for (std::shared_ptr<Generator> generator: generators){
+        cashe_.insert(std::pair<unsigned long, std::vector<std::shared_ptr<Order>>>(generator->getId(), std::vector<std::shared_ptr<Order>>()));
+    }
 }
 
 void FullSimulationLogger::sendCreatedOrder(const std::shared_ptr<Order> &order)
@@ -44,6 +44,18 @@ void FullSimulationLogger::setTimer(const std::shared_ptr<Timer> &timer)
 {
     timer_ = timer;
 
+}
+
+std::vector<unsigned long> FullSimulationLogger::getGeneratorsIDs()
+{
+    std::vector<unsigned long> ids;
+
+    transform(cashe_.begin(), cashe_.end(), std::back_inserter(ids),
+              [](const decltype(cashe_)::value_type & pair) {
+        return pair.first;
+    });
+
+    return ids;
 }
 
 std::size_t FullSimulationLogger::getAmountOfCreatedOrders(unsigned long generatorID)
@@ -89,10 +101,10 @@ Timer::time FullSimulationLogger::getAverageTimeInProcessor(unsigned long genera
         }
     }
 
-   if (amountOfOrders == 0){
+    if (amountOfOrders == 0){
         return 0;
-   }
-   return timeInProcessor / amountOfOrders;
+    }
+    return timeInProcessor / amountOfOrders;
 }
 
 Timer::time FullSimulationLogger::getAverageTimeInBuffer(unsigned long generatorID)
@@ -100,7 +112,21 @@ Timer::time FullSimulationLogger::getAverageTimeInBuffer(unsigned long generator
     auto vector = cashe_.at(generatorID);
     std::vector<Timer::time> times;
     std::transform(vector.begin(), vector.end(), std::back_inserter(times), [](const std::shared_ptr<Order> &order){
-        return (order->getProcessor() != nullptr)? order->getGettingTime() - order->getGeneratedTime(): order->getRefusedTime() - order->getGeneratedTime();
+        return (order->getProcessor() != nullptr)? order->getGettingTime() - order->getInsertionTime(): order->getRefusedTime() - order->getGeneratedTime();
     });
     return std::accumulate(times.begin(),times.end(),0) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+}
+
+double FullSimulationLogger::getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime)
+{
+    Timer::time workTime = 0;
+    for(auto element: cashe_){
+        for(std::shared_ptr<Order> order: element.second){
+            if (order->getProcessor() != nullptr && order->getProcessor()->getId() == processorID){
+                workTime+=order->getProcessTime();
+            }
+        }
+    }
+
+    return workTime/fullTime;
 }
