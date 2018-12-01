@@ -1,7 +1,17 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
-
+#include <memory>
 #include <QMessageBox>
+#include "fullsimulationlogger.hpp"
+#include "library/include/interfaces/Buffer.hpp"
+#include <library/include/interfaces/WorkCondition.hpp>
+#include <code/BufferImpl.hpp>
+#include <library/include/Condition.hpp>
+#include <code/ProcessorPoolImpl.hpp>
+#include <code/SupportiveFunctions.hpp>
+#include <library/include/SimpleGeneratorPool.hpp>
+#include <library/include/SimpleTimer.hpp>
+#include <library/include/Worker.hpp>
 
 const QString MainWindow::FULL_SIMULATE = "Full simulate";
 const QString MainWindow::STEP_BY_STEP_SIMULATE = "Step by step";
@@ -14,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     amountOfOrders_(-1),
     minTime_(-1),
     maxTime_(-1),
-    lamda_(-1)
+    lamda_(-1),
+    timer_(std::make_shared<SimpleTimer>())
 
 {
     ui->setupUi(this);
@@ -44,7 +55,7 @@ bool MainWindow::getVariables(){
         return false;
     }
 
-   minTime_ = ui->tA_2->text().toDouble(&ok);
+    minTime_ = ui->tA_2->text().toDouble(&ok);
     if (!ok || minTime_ < 0){
         showCriticalAlert("A must be a non negative double");
         return false;
@@ -56,37 +67,109 @@ bool MainWindow::getVariables(){
         return false;
     }
 
-     amountOfProcessors_ = ui->tProcessorAmount_2->text().toInt(&ok);
+    amountOfProcessors_ = ui->tProcessorAmount_2->text().toInt(&ok);
     if (!ok || amountOfGenerators_ <= 0){
         showCriticalAlert("Amount of processors must be positive integer");
         return false;
     }
-
     lamda_ = ui->tLamda_2->text().toDouble(&ok);
-    if (!ok || lamda_ < 0){
+    if (!ok || lamda_ <= 0){
         showCriticalAlert("Lamda must be a non negative double");
         return false;
     }
 
-   amountOfOrders_ = ui->tOrderAmount_2->text().toInt(&ok);
-   if (!ok || amountOfOrders_ <= 0){
-       showCriticalAlert("Amount of orders must be positive integer");
-       return false;
-   }
+    amountOfOrders_ = ui->tOrderAmount_2->text().toInt(&ok);
+    if (!ok || amountOfOrders_ <= 0){
+        showCriticalAlert("Amount of orders must be positive integer");
+        return false;
+    }
     bufferSize_ = ui->tBufferSize->text().toInt(&ok);
     if (!ok || bufferSize_ < 0){
-       showCriticalAlert("Buffer size must be positive integer or 0");
-       return false;
-   }
+        showCriticalAlert("Buffer size must be positive integer or 0");
+        return false;
+    }
     return true;
 }
 
 void MainWindow::runFullSimulation(){
-    showCriticalAlert("Full time");
+    std::shared_ptr<Buffer> buffer = std::make_shared<BufferImpl>(BufferImpl(static_cast<std::size_t>(bufferSize_)));
+    std::vector<int> priorities;
+
+    for (int i = 0; i<amountOfGenerators_; ++i){
+        priorities.push_back(i);
+    }
+
+    std::vector<double> lamdas;
+    for (int i = 0; i< amountOfProcessors_; i++){
+        lamdas.push_back(lamda_);
+    }
+    std::vector<std::shared_ptr<Processor>> processors = SupportiveFunctions::createProcessors(lamdas);
+    std::shared_ptr<ProcessorPool> processorPool = std::make_shared<ProcessorPoolImpl>(processors);
+    std::shared_ptr<GeneratorPool> generatorPool = std::make_shared<SimpleGeneratorPool>(SupportiveFunctions::createGenerators(priorities, minTime_, maxTime_));
+    std::shared_ptr<FullSimulationLogger> fullSimulationLogger = std::make_shared<FullSimulationLogger>(FullSimulationLogger(generatorPool));
+    std::shared_ptr<WorkCondition> condition = std::make_shared<Condition>(Condition(amountOfOrders_, fullSimulationLogger));
+    Worker worker(generatorPool, processorPool, buffer,timer_ ,condition, fullSimulationLogger);
+    ui->mainScreen->setEnabled(false);
+    ui->mainScreen->setHidden(true);
+    ui->fullTimeSimulationScreen->setHidden(false);
+    ui->fullTimeSimulationScreen->setEnabled(true);
+    worker.run();
+    showFullSimulationResults(fullSimulationLogger, processors);
+}
+
+void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors)
+{
+    ui->tableWidget->setFixedSize(800,600);
+    ui->tableWidget->setColumnCount(7);
+    ui->tableWidget->setRowCount(amountOfGenerators_);
+    ui->tableWidget->setShowGrid(true);
+    ui->tableWidget_2->setRowCount(amountOfProcessors_);
+    ui->tableWidget_2->setColumnCount(1);
+    ui->tableWidget_2->setHorizontalHeaderLabels(QStringList("Efficincy"));
+
+    QStringList verticalHeaderProc;
+    for (auto processor: processors){
+        verticalHeaderProc.append("Proc" + QString::number(processor->getId()));
+    }
+    ui->tableWidget_2->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+    ui->tableWidget_2->verticalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
+    for (std::size_t i =0; i<processors.size(); i++){
+        ui->tableWidget_2->setItem(i,0, new QTableWidgetItem(QString::number(logger->getProcessorWorkFactor(processors.at(i)->getId(), timer_->getCurrentTime()))));
+    }
+
+    QStringList horizontalHeader;
+    horizontalHeader.append("Orders");
+    horizontalHeader.append("Failure Prob");
+    horizontalHeader.append("System time");
+    horizontalHeader.append("Buffer time");
+    horizontalHeader.append("Proc time");
+    horizontalHeader.append("Buffer disp");
+    horizontalHeader.append("Proc disp");
+
+    QStringList verticalHeader;
+
+    auto ids = logger->getGeneratorsIDs();
+
+    for (unsigned long id: ids){
+        verticalHeader.append("Gen" + QString::number(id));
+    }
+
+    ui->tableWidget->setHorizontalHeaderLabels(horizontalHeader);
+    ui->tableWidget->setVerticalHeaderLabels(verticalHeader);
+    ui->tableWidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
+    for(std::size_t i = 0; i < ids.size(); i++){
+        ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(logger->getAmountOfCreatedOrders(ids[i]))));
+        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
+        ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(logger->getAverageTimeInSystem(ids[i]))));
+        ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(logger->getAverageTimeInBuffer(ids[i]))));
+        ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(logger->getAverageTimeInProcessor(ids[i]))));
+    }
 }
 
 void MainWindow::runStepByStepSimulation(){
-    showCriticalAlert("Step by step");
+    showCriticalAlert("Step by step hasn't created yet");
 }
 
 void MainWindow::on_bSimulate_pressed()
