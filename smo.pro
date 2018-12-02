@@ -25,8 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++14
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
+       # mainwindow.cpp \
     code/BufferImpl.cpp \
     code/GeneratorImpl.cpp \
     code/LoggerImpl.cpp \
@@ -41,10 +40,13 @@ SOURCES += \
     library/src/Timer.cpp \
     library/src/Worker.cpp \
     fullsimulationlogger.cpp \
-    stepbystepsimulationlogger.cpp
+    #stepbystepsimulationlogger.cpp \
+    mainwindow.cpp \
+   # stepbystepsimulationlogger.cpp
+    main.cpp
 
 HEADERS += \
-        mainwindow.hpp \
+        #mainwindow.hpp \
     code/BufferImpl.hpp \
     code/GeneratorImpl.hpp \
     code/LoggerImpl.hpp \
@@ -66,7 +68,9 @@ HEADERS += \
     library/include/SimpleTimer.hpp \
     library/include/Worker.hpp \
     fullsimulationlogger.hpp \
-    stepbystepsimulationlogger.hpp
+    #stepbystepsimulationlogger.hpp \
+    mainwindow.hpp \
+    #stepbystepsimulationlogger.hpp
 
 
 FORMS += \
