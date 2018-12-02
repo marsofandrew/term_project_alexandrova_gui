@@ -125,7 +125,7 @@ void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger>
     ui->tableWidget->setShowGrid(true);
     ui->tableWidget_2->setRowCount(amountOfProcessors_);
     ui->tableWidget_2->setColumnCount(1);
-    ui->tableWidget_2->setHorizontalHeaderLabels(QStringList("Efficincy"));
+    ui->tableWidget_2->setHorizontalHeaderLabels(QStringList("Efficiency"));
 
     QStringList verticalHeaderProc;
     for (auto processor: processors){
@@ -165,6 +165,8 @@ void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger>
         ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(logger->getAverageTimeInSystem(ids[i]))));
         ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(logger->getAverageTimeInBuffer(ids[i]))));
         ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(logger->getAverageTimeInProcessor(ids[i]))));
+        ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(logger->getBufferDispersion(ids[i]))));
+        ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(logger->getProcessorDispersion(ids[i]))));
     }
 }
 

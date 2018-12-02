@@ -47,7 +47,8 @@ public:
     Timer::time getAverageTimeInBuffer(unsigned long generatorID);
 
     double getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime);
-
+    double getBufferDispersion(unsigned long generatorID);
+    double getProcessorDispersion(unsigned long generatorID);
 private:
     std::shared_ptr<Timer> timer_;
     std::map<unsigned long, std::vector<std::shared_ptr<Order>>> cashe_;
