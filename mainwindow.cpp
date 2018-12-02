@@ -119,7 +119,7 @@ void MainWindow::runFullSimulation(){
 
 void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors)
 {
-    ui->tableWidget->setFixedSize(800,600);
+    ui->tableWidget->setFixedSize(800,400);
     ui->tableWidget->setColumnCount(7);
     ui->tableWidget->setRowCount(amountOfGenerators_);
     ui->tableWidget->setShowGrid(true);

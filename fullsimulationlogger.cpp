@@ -144,9 +144,11 @@ double FullSimulationLogger::getBufferDispersion(unsigned long generatorID)
                                                    order->getRefusedTime() - order->getGeneratedTime();
     });
     std::transform(bufferTimes.begin(), bufferTimes.end(), std::back_inserter(dispTimes), [averageTime] (const Timer::time &bufTime){
-        return std::abs(bufTime-averageTime);
+
+        return std::pow((bufTime-averageTime),2);
     });
-    return std::accumulate(dispTimes.begin(),dispTimes.end(),0.0) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+    return std::sqrt(std::accumulate(dispTimes.begin(),dispTimes.end(),0.0)) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+
 }
 
 double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
@@ -155,13 +157,17 @@ double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
     auto vector = cashe_.at(generatorID);
     std::vector<Timer::time> procTimes;
     std::vector<Timer::time> dispTimes;
-    std::transform(vector.begin(), vector.end(), std::back_inserter(dispTimes), [](const std::shared_ptr<Order> &order){
+
+    std::transform(vector.begin(), vector.end(), std::back_inserter(procTimes), [](const std::shared_ptr<Order> &order){
         if (order->getProcessor() != nullptr){
              return order->getProcessTime();
-        }
-    });
+        } else {
+            return 0.0;
+        }});
     std::transform(procTimes.begin(), procTimes.end(), std::back_inserter(dispTimes), [averageTime] (const Timer::time &procTime){
-        return std::abs(procTime-averageTime);
+        return std::pow((procTime-averageTime),2);
     });
-    return std::accumulate(dispTimes.begin(),dispTimes.end(),0.0) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+
+    return std::sqrt(std::accumulate(dispTimes.begin(),dispTimes.end(),0.0)) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+
 }

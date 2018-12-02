@@ -38,11 +38,12 @@ SOURCES += \
     library/src/SimpleTimer.cpp \
     library/src/Timer.cpp \
     library/src/Worker.cpp \
+    main.cpp
     fullsimulationlogger.cpp
-    #stepbystepsimulationlogger.cpp
+    stepbystepsimulationlogger.cpp
+
 
 HEADERS += \
-        mainwindow.hpp \
     code/BufferImpl.hpp \
     code/GeneratorImpl.hpp \
     code/ProcessorImpl.hpp \
@@ -62,8 +63,10 @@ HEADERS += \
     library/include/SimpleGeneratorPool.hpp \
     library/include/SimpleTimer.hpp \
     library/include/Worker.hpp \
+    mainwindow.hpp \
     fullsimulationlogger.hpp
     #stepbystepsimulationlogger.hpp \
+
 
 FORMS += \
         mainwindow.ui
