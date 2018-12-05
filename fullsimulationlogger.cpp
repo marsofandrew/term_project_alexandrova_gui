@@ -8,6 +8,7 @@
 #include <numeric>
 #include <utility>
 
+
 FullSimulationLogger::FullSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool)
 {
     auto generators = generatorPool->getGenerators();
@@ -144,11 +145,9 @@ double FullSimulationLogger::getBufferDispersion(unsigned long generatorID)
                                                    order->getRefusedTime() - order->getGeneratedTime();
     });
     std::transform(bufferTimes.begin(), bufferTimes.end(), std::back_inserter(dispTimes), [averageTime] (const Timer::time &bufTime){
-
         return std::pow((bufTime-averageTime),2);
     });
     return std::sqrt(std::accumulate(dispTimes.begin(),dispTimes.end(),0.0)) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
-
 }
 
 double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
@@ -157,7 +156,6 @@ double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
     auto vector = cashe_.at(generatorID);
     std::vector<Timer::time> procTimes;
     std::vector<Timer::time> dispTimes;
-
     std::transform(vector.begin(), vector.end(), std::back_inserter(procTimes), [](const std::shared_ptr<Order> &order){
         if (order->getProcessor() != nullptr){
              return order->getProcessTime();
@@ -169,5 +167,4 @@ double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
     });
 
     return std::sqrt(std::accumulate(dispTimes.begin(),dispTimes.end(),0.0)) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
-
 }

@@ -2,7 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include "fullsimulationlogger.hpp"
-
+#include "stepbystepsimulationlogger.hpp"
 #include <QMainWindow>
 #include <memory>
 
@@ -46,7 +46,7 @@ private:
     void runFullSimulation();
 
     void showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors);
-    void showStepByStepSimulationResults();
+    void showStepByStepSimulationResults(std::shared_ptr<StepByStepSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors);
 };
 
 #endif // MAINWINDOW_HPP
