@@ -61,10 +61,8 @@ public:
     //double getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime);
     //double getBufferDispersion(unsigned long generatorID);
     //double getProcessorDispersion(unsigned long generatorID);
-    Step getStep(int i)
-    {
-        return steps.at(i);
-    }
+    std::shared_ptr<Step> getStep(int i);
+
 private:
     std::shared_ptr<Timer> timer_;
 

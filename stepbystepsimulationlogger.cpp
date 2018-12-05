@@ -50,7 +50,6 @@ void StepByStepSimulationLogger::sendProcessedOrder(const std::shared_ptr<Order>
 
 void StepByStepSimulationLogger::sendBufferedOrder(const std::shared_ptr<Order> &order)
 {
-    std::cout<<"in";
     std::list<std::shared_ptr<Order>> temp = buffer_->getBufferQueue();
     std::list<Order> savedBuffer;
     std::transform(temp.begin(),temp.end(),std::back_inserter(savedBuffer),[](std::shared_ptr<Order> ord){
@@ -58,12 +57,9 @@ void StepByStepSimulationLogger::sendBufferedOrder(const std::shared_ptr<Order> 
     });
     Order ord = *order;
     std::shared_ptr<Processor> processorsInfo = nullptr;
-    int igh=10;
-    std::cout<<igh;
     Step s(BUFFERED,ord,savedBuffer,processorsInfo);
     steps.push_back(s);
-    int iggh=10;
-    std::cout<<iggh;
+
 }
 
 void StepByStepSimulationLogger::sendGetOrderFromBuffer(const std::shared_ptr<Order> &order)
@@ -85,6 +81,13 @@ void StepByStepSimulationLogger::setTimer(const std::shared_ptr<Timer> &timer)
     timer_ = timer;
 
 }
-
+std::shared_ptr<StepByStepSimulationLogger::Step> StepByStepSimulationLogger::getStep(int i)
+{
+    if (i>=steps.size())
+    {
+        return nullptr;
+    }
+    return std::make_shared<StepByStepSimulationLogger::Step>(steps.at(i));
+}
 
 //void StepByStepSimulationLogger::

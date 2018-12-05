@@ -1,23 +1,27 @@
 #include "stepbystepform.h"
 #include "ui_stepbystepform.h"
 #include <QTableWidget>
-
+#include <QMessageBox>
 
 namespace details{
 //StepByStepForm::
     static void onBufferedAction(int step,  int bufferSize_, Ui::StepByStepForm *ui,
                std::shared_ptr<StepByStepSimulationLogger> logger_)
     {
-        std::list<Order> temp = logger_->getStep(step).bufferQueue_;
+        std::list<Order> temp = logger_->getStep(step)->bufferQueue_;
         std::list<Order>::iterator it;
         for(int i = 0; i < bufferSize_; i++){//ids.size()
             it = std::next(temp.begin(),i);//,N
-            int size = temp.size();
             if (i<temp.size()) {
-                int id = (*it).getGenerator()->getId();
                 ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number((*it).getGenerator()->getId())));
+                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number((*it).getId())));
+                ui->tableBuffer->setItem(i, 2, new QTableWidgetItem(QString::number((*it).getGeneratedTime())));
+                //TODO buffered output to system state table
+                //TODO when senttoprocess call update on buffer
             } else {
                 ui->tableBuffer->setItem(i, 0, new QTableWidgetItem("null"));
+                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem("null"));
+                ui->tableBuffer->setItem(i, 2, new QTableWidgetItem("null"));
             }
             //ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
         }
@@ -144,7 +148,13 @@ StepByStepForm::~StepByStepForm()
 
 void StepByStepForm::getNextAction(int i)
 {
-    StepByStepSimulationLogger::Statuses status = logger_->getStep(i).status_;
+    std::shared_ptr<StepByStepSimulationLogger::Step> step = logger_->getStep(i);
+    if (step==nullptr)
+    {
+        QMessageBox::warning(this, "Конец","Моделирование системы закончено");
+        return;
+    }
+    StepByStepSimulationLogger::Statuses status = (*step).status_;
     actions[status](i,bufferSize_,ui,logger_);
 }
 
