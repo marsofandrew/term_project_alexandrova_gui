@@ -7,35 +7,23 @@
 #include <code/BufferImpl.hpp>
 #include <algorithm>
 #include <iostream>
-/*lass Order;
-class GeneratorPool;
-class ProcessorPool;*/
-//class BufferImpl;
+
 
 StepByStepSimulationLogger::StepByStepSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool,  std::shared_ptr<BufferImpl>& buffer,
                                                        std::shared_ptr<ProcessorPool>& processorPool):
     buffer_(buffer),
     processorPool_(processorPool)
 {
-
-    /*auto generators = generatorPool->getGenerators();
-    for (std::shared_ptr<Generator> generator: generators){
-        cache_.insert(std::pair<unsigned long, std::vector<std::shared_ptr<Order>>>(generator->getId(), std::vector<std::shared_ptr<Order>>()));
-    }*/
-
-
-    //bufferSteps_ = new std::vector<std::list<std::shared_ptr<Order>>>();
-    /*auto processors = processorPool->getProcessors();
-    for (std::shared_ptr<Generator> generator: generators){
-        cache_.insert(std::pair<unsigned long, std::vector<std::shared_ptr<Order>>>(generator->getId(), std::vector<std::shared_ptr<Order>>()));
-    }*/
-
 }
-//std::vector<std::string> statuses = {"Created","Refused","Buffered","SentToProcess","Processed"};
+
 void StepByStepSimulationLogger::sendCreatedOrder(const std::shared_ptr<Order> &order)
 {
     Order ord = *order;
     std::list<Order> savedBuffer;
+    std::list<std::shared_ptr<Order>> temp = buffer_->getBufferQueue();
+    std::transform(temp.begin(),temp.end(),std::back_inserter(savedBuffer),[](std::shared_ptr<Order> ord){
+        return *ord;
+    });
     Step s(CREATED,ord,savedBuffer);
     steps.push_back(s);
 }
@@ -44,14 +32,22 @@ void StepByStepSimulationLogger::sendRefusedOrder(const std::shared_ptr<Order> &
 {
     Order ord = *order;
     std::list<Order> savedBuffer;
+    std::list<std::shared_ptr<Order>> temp = buffer_->getBufferQueue();
+    std::transform(temp.begin(),temp.end(),std::back_inserter(savedBuffer),[](std::shared_ptr<Order> ord){
+        return *ord;
+    });
     Step s(REFUSED,ord,savedBuffer);
     steps.push_back(s);
 }
 
 void StepByStepSimulationLogger::sendProcessedOrder(const std::shared_ptr<Order> &order)
 {
-    std::list<Order> savedBuffer;
     Order ord = *order;
+    std::list<Order> savedBuffer;
+    std::list<std::shared_ptr<Order>> temp = buffer_->getBufferQueue();
+    std::transform(temp.begin(),temp.end(),std::back_inserter(savedBuffer),[](std::shared_ptr<Order> ord){
+        return *ord;
+    });
     Step s(PROCESSED,ord,savedBuffer);
     steps.push_back(s);
 }
@@ -85,7 +81,7 @@ void StepByStepSimulationLogger::sendAddingOrderToBuffer(const std::shared_ptr<O
 }
 
 void StepByStepSimulationLogger::sendOrderToProcessor(const std::shared_ptr<Order> &order,
-     const std::shared_ptr<Processor> &processor)
+     const std::shared_ptr<Processor> &)
 {
     std::list<std::shared_ptr<Order>> temp = buffer_->getBufferQueue();
     std::list<Order> savedBuffer;
@@ -93,7 +89,6 @@ void StepByStepSimulationLogger::sendOrderToProcessor(const std::shared_ptr<Orde
         return *ord;
     });
     Order ord = *order;
-    //TODO ord.setFinishProcessingTime(ord.getStartProcessTime()+processor->getPr);
     Step s(SENTTOPROCESS,ord,savedBuffer);
     steps.push_back(s);
 }
