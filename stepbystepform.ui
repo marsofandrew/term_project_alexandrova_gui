@@ -24,7 +24,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>391</width>
+     <width>301</width>
      <height>660</height>
     </rect>
    </property>
@@ -32,9 +32,9 @@
   <widget class="QTableWidget" name="tableProcessor">
    <property name="geometry">
     <rect>
-     <x>810</x>
+     <x>850</x>
      <y>0</y>
-     <width>391</width>
+     <width>351</width>
      <height>660</height>
     </rect>
    </property>
@@ -42,9 +42,9 @@
   <widget class="QTableWidget" name="tableSystem">
    <property name="geometry">
     <rect>
-     <x>400</x>
+     <x>312</x>
      <y>0</y>
-     <width>403</width>
+     <width>521</width>
      <height>660</height>
     </rect>
    </property>
