@@ -31,45 +31,23 @@ public:
     std::vector<unsigned long> getGeneratorsIDs();
 
     std::size_t getAmountOfCreatedOrders(unsigned long generatorID);
-    enum Statuses {CREATED,REFUSED,BUFFERED,SENTTOPROCESS,PROCESSED};
+    enum Statuses {CREATED,REFUSED,ADDING,BUFFERED,SENTTOPROCESS,PROCESSED};
     struct Step
     {
-        Step(Statuses status, Order order, std::list<Order> bufferQueue,
-             std::shared_ptr<Processor> processorsInfo):
+        Step(Statuses status, Order order, std::list<Order> bufferQueue):
             status_(status),
             order_(order),
-            bufferQueue_(bufferQueue),
-            processorsInfo_(processorsInfo)
+            bufferQueue_(bufferQueue)
         {}
         Statuses status_;
-        //std::map<Statuses, std::vector<std::shared_ptr<Order>>> cache_;
-        Order order_;//std::shared_ptr<Order>
-        std::list<Order> bufferQueue_;//std::shared_ptr<Order>
-        //std::shared_ptr<ProcessorPool> processorPool_;
-        std::shared_ptr<Processor> processorsInfo_;
-        //not a shared_ptr. We need to save a copy
-
+        Order order_;
+        std::list<Order> bufferQueue_;
     };
-    //double getRefusedProbability(unsigned long generatorID);
-
-    //Timer::time getAverageTimeInSystem(unsigned long generatorID);
-
-    //Timer::time getAverageTimeInProcessor(unsigned long generatorID);
-
-   // Timer::time getAverageTimeInBuffer(unsigned long generatorID);
-
-    //double getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime);
-    //double getBufferDispersion(unsigned long generatorID);
-    //double getProcessorDispersion(unsigned long generatorID);
     std::shared_ptr<Step> getStep(int i);
 
 private:
     std::shared_ptr<Timer> timer_;
-
-    //std::vector<Step> cache_;
-
     std::vector<Step> steps;
-    //std::vector<std::list<std::shared_ptr<Order>>> bufferSteps_;
     std::shared_ptr<BufferImpl> buffer_;
     std::shared_ptr<ProcessorPool> processorPool_;
 };

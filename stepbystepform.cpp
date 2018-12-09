@@ -4,39 +4,127 @@
 #include <QMessageBox>
 
 namespace details{
-//StepByStepForm::
-    static void onBufferedAction(int step,  int bufferSize_, Ui::StepByStepForm *ui,
-               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    static void updateSystemTable(Ui::StepByStepForm *ui,Timer::time time, unsigned long ordId,
+           std::string state,QString proc)
+    //because proc can be both string null and number of processor
     {
-        std::list<Order> temp = logger_->getStep(step)->bufferQueue_;
+        int tempRow = ui->tableSystem->rowCount();
+        ui->tableSystem->insertRow( tempRow );
+        ui->tableSystem->setItem(tempRow, 0, new QTableWidgetItem(QString::number(time)));
+        ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem(QString::number(ordId)));
+        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::fromStdString(state)));
+        ui->tableSystem->setItem(tempRow, 3, new QTableWidgetItem(proc));
+
+        static QStringList verticalHeader;
+        verticalHeader.append("Step" + QString::number(tempRow));
+        ui->tableSystem->setVerticalHeaderLabels(verticalHeader);
+    }
+
+    static void updateBufferTable(Ui::StepByStepForm *ui,std::list<Order>& buffer,
+           int bufferRealSize)
+    {
         std::list<Order>::iterator it;
-        for(int i = 0; i < bufferSize_; i++){//ids.size()
-            it = std::next(temp.begin(),i);//,N
-            if (i<temp.size()) {
+        for(int i = 0; i < bufferRealSize; i++){
+            it = std::next(buffer.begin(),i);
+            if (i<buffer.size()) {
                 ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number((*it).getGenerator()->getId())));
                 ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number((*it).getId())));
                 ui->tableBuffer->setItem(i, 2, new QTableWidgetItem(QString::number((*it).getGeneratedTime())));
-                //TODO buffered output to system state table
                 //TODO when senttoprocess call update on buffer
+
             } else {
                 ui->tableBuffer->setItem(i, 0, new QTableWidgetItem("null"));
                 ui->tableBuffer->setItem(i, 1, new QTableWidgetItem("null"));
                 ui->tableBuffer->setItem(i, 2, new QTableWidgetItem("null"));
             }
-            //ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
         }
     }
 
-    static void onRefusedAction(int step,  int bufferSize_, Ui::StepByStepForm *ui,
-               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    static void updateProcessorTable(Ui::StepByStepForm *ui,Order& ord, std::string state)
     {
-        int tempRow = ui->tableSystem->rowCount();
-        //ui->tableSystem->setItem(tempRow, 0, new QTableWidgetItem((*it)->getGenerator()->getId()));
-        ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem("Refuse\n order"));
-        //ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
+        int procId = ord.getProcessor()->getId();
+        ui->tableProcessor->setItem(procId, 0, new QTableWidgetItem(QString::fromStdString(state)));
+        ui->tableProcessor->setItem(procId, 3, new QTableWidgetItem(QString::number(ord.getId())));
+        if (state=="Busy")
+        {
+            ui->tableProcessor->setItem(procId, 1, new QTableWidgetItem(QString::number(ord.getStartProcessTime())));
+            ui->tableProcessor->setItem(procId, 2, new QTableWidgetItem("null"));
+
+        }
+        else
+        {
+            Timer::time finishTime = ord.getStartProcessTime() + ord.getProcessor()->getTimeToNextEvent();
+            ui->tableProcessor->setItem(procId, 1, new QTableWidgetItem("null"));
+            ui->tableProcessor->setItem(procId, 2, new QTableWidgetItem(QString::number(finishTime)));
+        }
 
     }
+
+    static void onBufferedAction(int step,  int bufferSize, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
+
+        Order ord = logger_->getStep(step)->order_;
+        updateSystemTable(ui,ord.getInsertionTime(), ord.getId(),"Buffered", QString::fromStdString("null"));
+        updateBufferTable(ui, buffer, bufferSize);
+    }
+
+    static void onRefusedAction(int step,  int bufferSize, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        Order ord = logger_->getStep(step)->order_;
+        updateSystemTable(ui, ord.getRefusedTime(), ord.getId(), "Refused", QString::fromStdString("null"));
+
+        std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
+        updateBufferTable(ui, buffer, bufferSize);
+    }
+    static void onSentToProcessAction(int step,  int bufferSize, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        Order ord = logger_->getStep(step)->order_;
+        updateSystemTable(ui, ord.getStartProcessTime(), ord.getId(),
+               "SentToProcess", QString::number(ord.getProcessor()->getId()));
+
+        std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
+        updateBufferTable(ui, buffer, bufferSize);
+
+        updateProcessorTable(ui,ord,"Busy");
+    }
+
+    static void onProcessedAction(int step,  int, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        Order ord = logger_->getStep(step)->order_;
+        updateSystemTable(ui, ord.getFinishProcessingTime(), ord.getId(),
+               "Processed", QString::number(ord.getProcessor()->getId()));
+
+        updateProcessorTable(ui,ord,"Free");
+
+    }
+
+    static void onCreatedAction(int step,  int, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        Order ord = logger_->getStep(step)->order_;
+        updateSystemTable(ui, ord.getGeneratedTime(), ord.getId(),
+               "Created",  QString::fromStdString("null"));
+    }
+
+    static void onAddingAction(int step,  int bufferSize, Ui::StepByStepForm *ui,
+               std::shared_ptr<StepByStepSimulationLogger> logger_)
+    {
+        std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
+
+        Order ord = logger_->getStep(step)->order_;
+        //trying to add an order to buffer
+        updateSystemTable(ui,ord.getGeneratedTime(), ord.getId(),
+              "Adding", QString::fromStdString("null"));
+        updateBufferTable(ui, buffer, bufferSize);
+    }
+
 }
+
 StepByStepForm::StepByStepForm(QWidget *parent,std::shared_ptr<StepByStepSimulationLogger> logger,
                                int amountOfGenerators,int amountOfProcessors,int bufferSize) :
     QDialog(parent),
@@ -48,8 +136,13 @@ StepByStepForm::StepByStepForm(QWidget *parent,std::shared_ptr<StepByStepSimulat
     stepNum(0)
 {
 
+    actions[StepByStepSimulationLogger::CREATED]=details::onCreatedAction;
     actions[StepByStepSimulationLogger::BUFFERED]=details::onBufferedAction;
     actions[StepByStepSimulationLogger::REFUSED]=details::onRefusedAction;
+    actions[StepByStepSimulationLogger::SENTTOPROCESS]=details::onSentToProcessAction;
+    actions[StepByStepSimulationLogger::PROCESSED]=details::onProcessedAction;
+    actions[StepByStepSimulationLogger::ADDING]=details::onAddingAction;
+
     ui->setupUi(this);
     this->setFixedSize(1200,700);
     setUpBufferTable();
@@ -72,12 +165,13 @@ void StepByStepForm::setUpBufferTable()
     }
     ui->tableBuffer->setFixedSize(391,660);
     ui->tableBuffer->setColumnCount(3);
-    ui->tableBuffer->setRowCount(bufferSize_);//bufferSize_);//TODO
+    ui->tableBuffer->setRowCount(bufferSize_);
     ui->tableBuffer->setShowGrid(true);
 
     ui->tableBuffer->setHorizontalHeaderLabels(horizontalHeader);
     ui->tableBuffer->setVerticalHeaderLabels(verticalHeader);
     ui->tableBuffer->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+
 }
 
 void StepByStepForm::setUpSystemTable()
@@ -85,23 +179,20 @@ void StepByStepForm::setUpSystemTable()
     QStringList horizontalHeader;
 
     horizontalHeader.append("Time");
-    horizontalHeader.append("Action");
-    horizontalHeader.append("Processor");
-    QStringList verticalHeader;
+    horizontalHeader.append("OrdNum");
+    horizontalHeader.append("OrdState");
+    horizontalHeader.append("ProcId");
 
-    for (int i=0; i<bufferSize_;++i)
-    {
-        verticalHeader.append("Step" + QString::number(i));
-    }
     ui->tableSystem->setFixedSize(391,660);
-    ui->tableSystem->setColumnCount(3);
-    ui->tableSystem->setRowCount(amountOfGenerators_);//;//TODO
+    ui->tableSystem->setColumnCount(4);
+    ui->tableSystem->setRowCount(0);
     ui->tableSystem->setShowGrid(true);
 
     ui->tableSystem->setHorizontalHeaderLabels(horizontalHeader);
-    ui->tableSystem->setVerticalHeaderLabels(verticalHeader);
-    ui->tableSystem->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
-
+    ui->tableSystem->setColumnWidth(0, 70);
+    ui->tableSystem->setColumnWidth(1, 70);
+    ui->tableSystem->setColumnWidth(2, 130);
+    ui->tableSystem->setColumnWidth(3, 65);
 }
 
 void StepByStepForm::setUpProcessorTable()
@@ -120,7 +211,7 @@ void StepByStepForm::setUpProcessorTable()
     }
     ui->tableProcessor->setFixedSize(391,660);
     ui->tableProcessor->setColumnCount(4);
-    ui->tableProcessor->setRowCount(amountOfProcessors_);//;//TODO
+    ui->tableProcessor->setRowCount(amountOfProcessors_);
     ui->tableProcessor->setShowGrid(true);
 
     ui->tableProcessor->setHorizontalHeaderLabels(horizontalHeader);
@@ -133,25 +224,12 @@ StepByStepForm::~StepByStepForm()
     delete ui;
 }
 
-
-
-/*void StepByStepForm::onBufferedAction(int step)
-{   std::list<std::shared_ptr<Order>> temp = logger_->getStep(step).bufferQueue_;
-    std::list<std::shared_ptr<Order>>::iterator it;
-    for(int i = 0; i < bufferSize_; i++){//ids.size()
-        it = std::next(temp.begin());//,N
-        ui->tableBuffer->setItem(i, 0, new QTableWidgetItem((*it)->getGenerator()->getId()));
-        //ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
-    }
-}*/
-
-
 void StepByStepForm::getNextAction(int i)
 {
     std::shared_ptr<StepByStepSimulationLogger::Step> step = logger_->getStep(i);
     if (step==nullptr)
     {
-        QMessageBox::warning(this, "Конец","Моделирование системы закончено");
+        QMessageBox::warning(this, "Done","The modeling of the system has been finished");
         return;
     }
     StepByStepSimulationLogger::Statuses status = (*step).status_;
@@ -161,14 +239,5 @@ void StepByStepForm::getNextAction(int i)
 void StepByStepForm::on_nextStepButton_clicked()
 {
     getNextAction(stepNum++);
-    //logger_->ge
-   /* for(std::size_t i = 0; i < bufferSize_; i++){//ids.size()
-        ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number(i)));
-        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(logger->getRefusedProbability(ids[i]))));
-        ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(logger->getAverageTimeInSystem(ids[i]))));
-        ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(logger->getAverageTimeInBuffer(ids[i]))));
-        ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(logger->getAverageTimeInProcessor(ids[i]))));
-        ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(logger->getBufferDispersion(ids[i]))));
-        ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(logger->getProcessorDispersion(ids[i]))));
-    }*/
+    ui->tableSystem->scrollToBottom();
 }

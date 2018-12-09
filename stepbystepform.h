@@ -24,13 +24,8 @@ public:
     void setUpBufferTable();
     void setUpSystemTable();
     void setUpProcessorTable();
-    ~StepByStepForm();
     void getNextAction(int i);
-   // void onBufferedAction(int step);
-   //static void onBufferedAction(int step,  int bufferSize_, Ui::StepByStepForm *ui/*QTableWidget* qtw*/,
-   //                              std::shared_ptr<StepByStepSimulationLogger> logger_);
-  //  static void onRefusedAction(int step,  int bufferSize_, Ui::StepByStepForm *ui,/*QTableWidget* qtw*/,
-   //                              std::shared_ptr<StepByStepSimulationLogger> logger_);
+    ~StepByStepForm();
 
 private slots:
     void on_nextStepButton_clicked();
@@ -42,10 +37,8 @@ private:
     int amountOfGenerators_;
     int amountOfProcessors_;
     int bufferSize_;
-    //std::map<StepByStepSimulationLogger::Statuses, std::function<void(int)> > actions
     std::map<StepByStepSimulationLogger::Statuses, std::function<void(int, int,Ui::StepByStepForm *,
             std::shared_ptr<StepByStepSimulationLogger>)> > actions;
-
 };
 
 #endif // FORMTODELETE_H
