@@ -3,6 +3,8 @@
 #include <memory>
 #include <QMessageBox>
 #include "fullsimulationlogger.hpp"
+#include "stepbystepsimulationlogger.hpp"
+#include "stepbystepform.h"
 #include "library/include/interfaces/Buffer.hpp"
 #include <library/include/interfaces/WorkCondition.hpp>
 #include <code/BufferImpl.hpp>
@@ -25,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     minTime_(-1),
     maxTime_(-1),
     lamda_(-1),
-    timer_(std::make_shared<SimpleTimer>())
+    timer_(std::make_shared<SimpleTimer>()),
+    bufferSize_(-1)
 
 {
     ui->setupUi(this);
@@ -171,7 +174,48 @@ void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger>
 }
 
 void MainWindow::runStepByStepSimulation(){
-    showCriticalAlert("Step by step hasn't created yet");
+    //TODO StepByStepSimulation
+    //simulate here then pass logger to the StepByStepForm
+    std::shared_ptr<BufferImpl> buffer = std::make_shared<BufferImpl>(BufferImpl(static_cast<std::size_t>(bufferSize_)));
+
+    std::vector<int> priorities;
+
+    for (int i = 0; i<amountOfGenerators_; ++i){
+        priorities.push_back(i);
+    }
+
+    std::vector<double> lamdas;
+    for (int i = 0; i< amountOfProcessors_; i++){
+        lamdas.push_back(lamda_);
+    }
+    std::vector<std::shared_ptr<Processor>> processors = SupportiveFunctions::createProcessors(lamdas);
+    std::shared_ptr<ProcessorPool> processorPool = std::make_shared<ProcessorPoolImpl>(processors);
+
+    std::shared_ptr<GeneratorPool> generatorPool = std::make_shared<SimpleGeneratorPool>(SupportiveFunctions::createGenerators(priorities, minTime_, maxTime_));
+    std::shared_ptr<StepByStepSimulationLogger> stepByStepSimulationLogger = std::make_shared<StepByStepSimulationLogger>(
+                StepByStepSimulationLogger(generatorPool,buffer,processorPool));
+
+    std::shared_ptr<WorkCondition> condition = std::make_shared<Condition>(Condition(amountOfOrders_, stepByStepSimulationLogger));
+    Worker worker(generatorPool, processorPool, buffer,timer_ ,condition, stepByStepSimulationLogger);
+
+    /*ui->mainScreen->setEnabled(false);
+    ui->mainScreen->setHidden(true);
+    ui->fullTimeSimulationScreen->setHidden(false);
+    ui->fullTimeSimulationScreen->setEnabled(true);*/
+    worker.run();
+    showStepByStepSimulationResults(stepByStepSimulationLogger,processors);
+}
+
+void MainWindow::showStepByStepSimulationResults(std::shared_ptr<StepByStepSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors)
+{
+    std::shared_ptr<StepByStepForm> sbs = std::make_shared<StepByStepForm>(nullptr,
+                       logger,
+                       amountOfGenerators_,
+                       amountOfProcessors_,
+                       bufferSize_);
+    sbs->setModal(true);
+    sbs->exec();
+   // this->hide();
 }
 
 void MainWindow::on_bSimulate_pressed()
@@ -181,6 +225,13 @@ void MainWindow::on_bSimulate_pressed()
             runFullSimulation();
         } else if (ui->comboBox->currentText() == STEP_BY_STEP_SIMULATE){
             runStepByStepSimulation();
+            //QMessageBox::warning(this, "Внимание","Это очень важный текст");
+
+ /*std::shared_ptr<StepByStepSimulationLogger> l;
+            StepByStepForm sbs(this,l,7,5,10);
+            sbs.setModal(true);
+            sbs.exec();*/
+
         }
     }
 }

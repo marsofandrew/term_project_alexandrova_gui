@@ -25,9 +25,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++14
 
 SOURCES += \
-        mainwindow.cpp \
+       # mainwindow.cpp \
     code/BufferImpl.cpp \
     code/GeneratorImpl.cpp \
+    code/LoggerImpl.cpp \
     code/ProcessorImpl.cpp \
     code/ProcessorPoolImpl.cpp \
     code/SupportiveFunctions.cpp \
@@ -38,14 +39,19 @@ SOURCES += \
     library/src/SimpleTimer.cpp \
     library/src/Timer.cpp \
     library/src/Worker.cpp \
-    main.cpp
-    fullsimulationlogger.cpp
-    stepbystepsimulationlogger.cpp
-
+    fullsimulationlogger.cpp \
+    #stepbystepsimulationlogger.cpp \
+    mainwindow.cpp \
+   # stepbystepsimulationlogger.cpp
+    main.cpp \
+    stepbystepsimulationlogger.cpp \
+    stepbystepform.cpp
 
 HEADERS += \
+        #mainwindow.hpp \
     code/BufferImpl.hpp \
     code/GeneratorImpl.hpp \
+    code/LoggerImpl.hpp \
     code/ProcessorImpl.hpp \
     code/ProcessorPoolImpl.hpp \
     code/SupportiveFunctions.hpp \
@@ -63,13 +69,17 @@ HEADERS += \
     library/include/SimpleGeneratorPool.hpp \
     library/include/SimpleTimer.hpp \
     library/include/Worker.hpp \
-    mainwindow.hpp \
-    fullsimulationlogger.hpp
+    fullsimulationlogger.hpp \
     #stepbystepsimulationlogger.hpp \
+    mainwindow.hpp \
+    #stepbystepsimulationlogger.hpp
+    stepbystepsimulationlogger.hpp \
+    stepbystepform.h
 
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    stepbystepform.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
