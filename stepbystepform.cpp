@@ -4,16 +4,17 @@
 #include <QMessageBox>
 
 namespace details{
-    static void updateSystemTable(Ui::StepByStepForm *ui,Timer::time time, unsigned long ordId,
+    static void updateSystemTable(Ui::StepByStepForm *ui,Timer::time time,unsigned long ordGenId, unsigned long ordId,
            std::string state,QString proc)
     //because proc can be both string null and number of processor
     {
         int tempRow = ui->tableSystem->rowCount();
         ui->tableSystem->insertRow( tempRow );
         ui->tableSystem->setItem(tempRow, 0, new QTableWidgetItem(QString::number(time)));
-        ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem(QString::number(ordId)));
-        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::fromStdString(state)));
-        ui->tableSystem->setItem(tempRow, 3, new QTableWidgetItem(proc));
+        ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem(QString::number(ordGenId)));
+        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::number(ordId)));
+        ui->tableSystem->setItem(tempRow, 3, new QTableWidgetItem(QString::fromStdString(state)));
+        ui->tableSystem->setItem(tempRow, 4, new QTableWidgetItem(proc));
 
         static QStringList verticalHeader;
         verticalHeader.append("Step" + QString::number(tempRow));
@@ -66,7 +67,8 @@ namespace details{
         std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
 
         Order ord = logger_->getStep(step)->order_;
-        updateSystemTable(ui,ord.getInsertionTime(), ord.getId(),"Buffered", QString::fromStdString("null"));
+        updateSystemTable(ui,ord.getInsertionTime(),ord.getGenerator()->getId(),ord.getId(),
+              "Buffered", QString::fromStdString("null"));
         updateBufferTable(ui, buffer, bufferSize);
     }
 
@@ -74,7 +76,8 @@ namespace details{
                std::shared_ptr<StepByStepSimulationLogger> logger_)
     {
         Order ord = logger_->getStep(step)->order_;
-        updateSystemTable(ui, ord.getRefusedTime(), ord.getId(), "Refused", QString::fromStdString("null"));
+        updateSystemTable(ui, ord.getRefusedTime(), ord.getGenerator()->getId(), ord.getId(),
+              "Refused", QString::fromStdString("null"));
 
         std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
         updateBufferTable(ui, buffer, bufferSize);
@@ -83,7 +86,7 @@ namespace details{
                std::shared_ptr<StepByStepSimulationLogger> logger_)
     {
         Order ord = logger_->getStep(step)->order_;
-        updateSystemTable(ui, ord.getStartProcessTime(), ord.getId(),
+        updateSystemTable(ui, ord.getStartProcessTime(), ord.getGenerator()->getId(), ord.getId(),
                "SentToProcess", QString::number(ord.getProcessor()->getId()));
 
         std::list<Order> buffer = logger_->getStep(step)->bufferQueue_;
@@ -96,7 +99,7 @@ namespace details{
                std::shared_ptr<StepByStepSimulationLogger> logger_)
     {
         Order ord = logger_->getStep(step)->order_;
-        updateSystemTable(ui, ord.getFinishProcessingTime(), ord.getId(),
+        updateSystemTable(ui, ord.getFinishProcessingTime(), ord.getGenerator()->getId(), ord.getId(),
                "Processed", QString::number(ord.getProcessor()->getId()));
 
         updateProcessorTable(ui,ord,"Free");
@@ -107,7 +110,7 @@ namespace details{
                std::shared_ptr<StepByStepSimulationLogger> logger_)
     {
         Order ord = logger_->getStep(step)->order_;
-        updateSystemTable(ui, ord.getGeneratedTime(), ord.getId(),
+        updateSystemTable(ui, ord.getGeneratedTime(), ord.getGenerator()->getId(), ord.getId(),
                "Created",  QString::fromStdString("null"));
     }
 
@@ -118,7 +121,7 @@ namespace details{
 
         Order ord = logger_->getStep(step)->order_;
         //trying to add an order to buffer
-        updateSystemTable(ui,ord.getGeneratedTime(), ord.getId(),
+        updateSystemTable(ui,ord.getGeneratedTime(), ord.getGenerator()->getId(), ord.getId(),
               "Adding", QString::fromStdString("null"));
         updateBufferTable(ui, buffer, bufferSize);
     }
@@ -163,7 +166,7 @@ void StepByStepForm::setUpBufferTable()
     {
         verticalHeader.append("BufCell" + QString::number(i));
     }
-    ui->tableBuffer->setFixedSize(391,660);
+    ui->tableBuffer->setFixedSize(301,660);
     ui->tableBuffer->setColumnCount(3);
     ui->tableBuffer->setRowCount(bufferSize_);
     ui->tableBuffer->setShowGrid(true);
@@ -179,20 +182,22 @@ void StepByStepForm::setUpSystemTable()
     QStringList horizontalHeader;
 
     horizontalHeader.append("Time");
+    horizontalHeader.append("OrdGen");
     horizontalHeader.append("OrdNum");
     horizontalHeader.append("OrdState");
     horizontalHeader.append("ProcId");
 
-    ui->tableSystem->setFixedSize(391,660);
-    ui->tableSystem->setColumnCount(4);
+    ui->tableSystem->setFixedSize(521,660);
+    ui->tableSystem->setColumnCount(5);
     ui->tableSystem->setRowCount(0);
     ui->tableSystem->setShowGrid(true);
 
     ui->tableSystem->setHorizontalHeaderLabels(horizontalHeader);
     ui->tableSystem->setColumnWidth(0, 70);
     ui->tableSystem->setColumnWidth(1, 70);
-    ui->tableSystem->setColumnWidth(2, 130);
-    ui->tableSystem->setColumnWidth(3, 65);
+    ui->tableSystem->setColumnWidth(2, 70);
+    ui->tableSystem->setColumnWidth(3, 130);
+    ui->tableSystem->setColumnWidth(4, 65);
 }
 
 void StepByStepForm::setUpProcessorTable()
@@ -209,7 +214,7 @@ void StepByStepForm::setUpProcessorTable()
     {
         verticalHeader.append("Proc" + QString::number(i));
     }
-    ui->tableProcessor->setFixedSize(391,660);
+    ui->tableProcessor->setFixedSize(351,660);
     ui->tableProcessor->setColumnCount(4);
     ui->tableProcessor->setRowCount(amountOfProcessors_);
     ui->tableProcessor->setShowGrid(true);
