@@ -9,10 +9,10 @@
 #include <utility>
 
 
-FullSimulationLogger::FullSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool)
-{
-    auto generators = generatorPool->getGenerators();
-    for (std::shared_ptr<Generator> generator: generators){
+FullSimulationLogger::FullSimulationLogger(const std::shared_ptr<GeneratorPool>& generatorPool):
+    generatorPool_(generatorPool)
+{    
+for (std::shared_ptr<Generator> generator: generatorPool->getGenerators()){
         cashe_.insert(std::pair<unsigned long, std::vector<std::shared_ptr<Order>>>(generator->getId(), std::vector<std::shared_ptr<Order>>()));
     }
 }
@@ -167,4 +167,17 @@ double FullSimulationLogger::getProcessorDispersion(unsigned long generatorID)
     });
 
     return std::sqrt(std::accumulate(dispTimes.begin(),dispTimes.end(),0.0)) / static_cast<Timer::time>(getAmountOfCreatedOrders(generatorID));
+}
+
+double FullSimulationLogger::getAverageRefusedProbability()
+{
+    std::size_t amountOfRefusedOrders = 0;
+    for(auto element: cashe_){
+        for (auto order: element.second){
+            if(!order->getProcessor()){
+                amountOfRefusedOrders++;
+            }
+        }
+    }
+    return static_cast<double>(amountOfRefusedOrders)/ generatorPool_->getAmountOfGeneratedOrders();
 }

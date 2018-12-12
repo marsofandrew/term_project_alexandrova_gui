@@ -45,7 +45,7 @@ private:
     void runStepByStepSimulation();
     void runFullSimulation();
 
-    void showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors);
+    void showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors, std::shared_ptr<GeneratorPool> &generatorPool);
     void showStepByStepSimulationResults(std::shared_ptr<StepByStepSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors);
 };
 

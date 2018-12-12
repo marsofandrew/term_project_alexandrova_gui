@@ -117,14 +117,14 @@ void MainWindow::runFullSimulation(){
     ui->fullTimeSimulationScreen->setHidden(false);
     ui->fullTimeSimulationScreen->setEnabled(true);
     worker.run();
-    showFullSimulationResults(fullSimulationLogger, processors);
+    showFullSimulationResults(fullSimulationLogger, processors, generatorPool);
 }
 
-void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors)
+void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger> &logger, std::vector<std::shared_ptr<Processor>>& processors, std::shared_ptr<GeneratorPool> &generatorPool)
 {
     ui->tableWidget->setFixedSize(800,400);
     ui->tableWidget->setColumnCount(7);
-    ui->tableWidget->setRowCount(amountOfGenerators_);
+    ui->tableWidget->setRowCount(amountOfGenerators_ + 1);
     ui->tableWidget->setShowGrid(true);
     ui->tableWidget_2->setRowCount(amountOfProcessors_);
     ui->tableWidget_2->setColumnCount(1);
@@ -157,7 +157,7 @@ void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger>
     for (unsigned long id: ids){
         verticalHeader.append("Gen" + QString::number(id));
     }
-
+        verticalHeader.append("All");
     ui->tableWidget->setHorizontalHeaderLabels(horizontalHeader);
     ui->tableWidget->setVerticalHeaderLabels(verticalHeader);
     ui->tableWidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
@@ -171,6 +171,9 @@ void MainWindow::showFullSimulationResults(std::shared_ptr<FullSimulationLogger>
         ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(logger->getBufferDispersion(ids[i]))));
         ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(logger->getProcessorDispersion(ids[i]))));
     }
+
+    ui->tableWidget->setItem(ids.size(), 0, new QTableWidgetItem(QString::number(generatorPool->getAmountOfGeneratedOrders())));
+    ui->tableWidget->setItem(ids.size(), 1, new QTableWidgetItem(QString::number(logger->getAverageRefusedProbability())));
 }
 
 void MainWindow::runStepByStepSimulation(){
