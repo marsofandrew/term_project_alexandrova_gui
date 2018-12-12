@@ -12,7 +12,7 @@ namespace details{
         ui->tableSystem->insertRow( tempRow );
         ui->tableSystem->setItem(tempRow, 0, new QTableWidgetItem(QString::number(time)));
         ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem(QString::number(ordGenId)));
-        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::number(ordId)));
+        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number(ordId)));
         ui->tableSystem->setItem(tempRow, 3, new QTableWidgetItem(QString::fromStdString(state)));
         ui->tableSystem->setItem(tempRow, 4, new QTableWidgetItem(proc));
 
@@ -28,8 +28,9 @@ namespace details{
         for(int i = 0; i < bufferRealSize; i++){
             it = std::next(buffer.begin(),i);
             if (i<buffer.size()) {
-                ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number((*it).getGenerator()->getId())));
-                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number((*it).getId())));
+                unsigned long ordGenId = (*it).getGenerator()->getId();
+                ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number(ordGenId)));
+                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number((*it).getId())));
                 ui->tableBuffer->setItem(i, 2, new QTableWidgetItem(QString::number((*it).getGeneratedTime())));
                 //TODO when senttoprocess call update on buffer
 
@@ -44,8 +45,9 @@ namespace details{
     static void updateProcessorTable(Ui::StepByStepForm *ui,Order& ord, std::string state)
     {
         int procId = ord.getProcessor()->getId();
+        unsigned long ordGenId =  ord.getGenerator()->getId();
         ui->tableProcessor->setItem(procId, 0, new QTableWidgetItem(QString::fromStdString(state)));
-        ui->tableProcessor->setItem(procId, 3, new QTableWidgetItem(QString::number(ord.getId())));
+        ui->tableProcessor->setItem(procId, 3, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number(ord.getId())));
         if (state=="Busy")
         {
             ui->tableProcessor->setItem(procId, 1, new QTableWidgetItem(QString::number(ord.getStartProcessTime())));
