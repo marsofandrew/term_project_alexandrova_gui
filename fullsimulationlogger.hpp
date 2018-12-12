@@ -49,9 +49,12 @@ public:
     double getProcessorWorkFactor(unsigned long processorID, Timer::time fullTime);
     double getBufferDispersion(unsigned long generatorID);
     double getProcessorDispersion(unsigned long generatorID);
+
+    double getAverageRefusedProbability();
 private:
     std::shared_ptr<Timer> timer_;
     std::map<unsigned long, std::vector<std::shared_ptr<Order>>> cashe_;
+    std::shared_ptr<GeneratorPool> generatorPool_;
 };
 
 #endif // FULLSIMULATIONLOGGER_HPP

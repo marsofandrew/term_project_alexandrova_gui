@@ -12,7 +12,7 @@ namespace details{
         ui->tableSystem->insertRow( tempRow );
         ui->tableSystem->setItem(tempRow, 0, new QTableWidgetItem(QString::number(time)));
         ui->tableSystem->setItem(tempRow, 1, new QTableWidgetItem(QString::number(ordGenId)));
-        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number(ordId)));
+        ui->tableSystem->setItem(tempRow, 2, new QTableWidgetItem(QString::number(ordGenId)+"-"+QString::number(ordId)));
         ui->tableSystem->setItem(tempRow, 3, new QTableWidgetItem(QString::fromStdString(state)));
         ui->tableSystem->setItem(tempRow, 4, new QTableWidgetItem(proc));
 
@@ -30,7 +30,7 @@ namespace details{
             if (i<buffer.size()) {
                 unsigned long ordGenId = (*it).getGenerator()->getId();
                 ui->tableBuffer->setItem(i, 0, new QTableWidgetItem(QString::number(ordGenId)));
-                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number((*it).getId())));
+                ui->tableBuffer->setItem(i, 1, new QTableWidgetItem(QString::number(ordGenId)+"-"+QString::number((*it).getId())));
                 ui->tableBuffer->setItem(i, 2, new QTableWidgetItem(QString::number((*it).getGeneratedTime())));
                 //TODO when senttoprocess call update on buffer
 
@@ -47,7 +47,7 @@ namespace details{
         int procId = ord.getProcessor()->getId();
         unsigned long ordGenId =  ord.getGenerator()->getId();
         ui->tableProcessor->setItem(procId, 0, new QTableWidgetItem(QString::fromStdString(state)));
-        ui->tableProcessor->setItem(procId, 3, new QTableWidgetItem(QString::number(ordGenId)+"."+QString::number(ord.getId())));
+        ui->tableProcessor->setItem(procId, 3, new QTableWidgetItem(QString::number(ordGenId)+"-"+QString::number(ord.getId())));
         if (state=="Busy")
         {
             ui->tableProcessor->setItem(procId, 1, new QTableWidgetItem(QString::number(ord.getStartProcessTime())));
@@ -185,7 +185,7 @@ void StepByStepForm::setUpSystemTable()
 
     horizontalHeader.append("Time");
     horizontalHeader.append("OrdGen");
-    horizontalHeader.append("OrdNum");
+    horizontalHeader.append("OrderNum");
     horizontalHeader.append("OrdState");
     horizontalHeader.append("ProcId");
 
